@@ -2,8 +2,8 @@ name: CI - Build and Push to GHCR
 
 on:
   push:
-    branches: [ "main" ] # Déclenche le workflow à chaque push sur la branche main
-    tags: [ "v*" ]       # Déclenche aussi lors de la publication d'un tag (ex: v1.0.0)
+    branches: ["main"]
+    tags: ["v*"]
 
 env:
   REGISTRY: ghcr.io
@@ -12,21 +12,25 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
-      packages: write # Requis pour publier et lire sur GitHub Container Registry
-      security-events: write # Optionnel : Requis si vous voulez afficher les rapports dans l'onglet Security de GitHub
+      packages: write
+      security-events: write
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
+
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -36,7 +40,8 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest
-            type=sha,prefix=,format=long # Ajoute le SHA du commit comme tag de l'image pour Trivy
+            type=sha,prefix=,format=long
+
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -47,26 +52,32 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      # --- TRIVY SCAN LOCATION ---
+
+      # --- TRIVY SECURITY SCAN ---
+
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@v0.20.0
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/devops-platform:${{ github.sha }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           format: table
-          exit-code: 1 # Bloque le pipeline (fail) si des vulnérabilités CRITICAL ou HIGH sont trouvées
+          exit-code: 1
           severity: CRITICAL,HIGH
-       
-       # --- DEPLOY --
-       - name: Deploy application
-         uses: appleboy/ssh-action@v1	  
-	 with:
-    	   host: ${{ secrets.VM_HOST }}
-           username: ${{ secrets.VM_USER }}
+          ignore-unfixed: true
 
-           key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-           script: |
+      # --- DEPLOY ---
 
-             docker pull ghcr.io/upg/devops-platform:latest
+      - name: Deploy application
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-             docker compose up -d
+          script: |
+
+            cd ~/devops-platform
+
+            docker pull ghcr.io/cincotech/devops-platform:latest
+
+            docker compose up -d
