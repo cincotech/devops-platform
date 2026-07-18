@@ -56,20 +56,17 @@ jobs:
           exit-code: 1 # Bloque le pipeline (fail) si des vulnérabilités CRITICAL ou HIGH sont trouvées
           severity: CRITICAL,HIGH
        
-      # --- DEPLOY --
-      - name: Deploy application
-        uses: appleboy/ssh-action@v1
-	  
-	with:
+       # --- DEPLOY --
+       - name: Deploy application
+         uses: appleboy/ssh-action@v1	  
+	 with:
+    	   host: ${{ secrets.VM_HOST }}
+           username: ${{ secrets.VM_USER }}
 
-    	  host: ${{ secrets.VM_HOST }}
+           key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-          username: ${{ secrets.VM_USER }}
+           script: |
 
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+             docker pull ghcr.io/upg/devops-platform:latest
 
-          script: |
-
-            docker pull ghcr.io/upg/devops-platform:latest
-
-            docker compose up -d
+             docker compose up -d
