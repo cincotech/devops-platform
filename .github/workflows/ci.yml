@@ -1,17 +1,22 @@
 name: CI - Build and Push to GHCR
+
 on:
   push:
     branches: [ "main" ] # Déclenche le workflow à chaque push sur la branche main
     tags: [ "v*" ]       # Déclenche aussi lors de la publication d'un tag (ex: v1.0.0)
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: cincotech/devops-platform
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Requis pour publier sur GitHub Container Registry
+      packages: write # Requis pour publier et lire sur GitHub Container Registry
+      security-events: write # Optionnel : Requis si vous voulez afficher les rapports dans l'onglet Security de GitHub
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,6 +27,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -30,12 +36,22 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest
+            type=sha,prefix=,format=long # Ajoute le SHA du commit comme tag de l'image pour Trivy
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/Dockerfile # Chemin spécifié vers votre sous-dossier
+          file: ./docker/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      # --- TRIVY SCAN LOCATION ---
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/devops-platform:${{ github.sha }}
+          format: table
+          exit-code: 1 # Bloque le pipeline (fail) si des vulnérabilités CRITICAL ou HIGH sont trouvées
+          severity: CRITICAL,HIGH
