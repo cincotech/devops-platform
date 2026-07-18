@@ -41,5 +41,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ std.id == 'meta' && steps.meta.outputs.tags || env.REGISTRY == 'ghcr.io' && 'ghcr.io/cincotech/devops-platform:latest' }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
