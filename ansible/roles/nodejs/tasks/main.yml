@@ -1,0 +1,16 @@
+---
+# tasks file for roles/nodejs
+- name: Installer Node.js
+  apt:
+    name:
+      - nodejs
+      - npm
+    state: present
+    update_cache: yes
+- name: Vérifier Node.js
+  command: node --version
+  register: node_version
+  changed_when: false
+- name: Afficher la version
+  debug:
+    var: node_version.stdout

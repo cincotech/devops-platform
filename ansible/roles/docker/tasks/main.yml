@@ -1,0 +1,22 @@
+---
+# tasks file for roles/docker
+- name: Mettre à jour le cache APT
+  apt:
+    update_cache: yes
+
+- name: Installer Docker Engine
+  apt:
+    name: docker.io
+    state: present
+
+- name: Démarrer le service Docker
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Ajouter l'utilisateur devops au groupe docker
+  user:
+    name: devops
+    groups: docker
+    append: yes

@@ -1,0 +1,6 @@
+---
+# tasks file for roles/docker-compose
+- name: Installer Docker Compose
+  apt:
+    name: docker-compose-v2
+    state: present
