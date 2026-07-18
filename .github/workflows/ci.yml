@@ -1,21 +1,17 @@
 name: CI - Build and Push to GHCR
-
 on:
   push:
-    branches: [ "main" ] # Le workflow se déclenche à chaque push sur main
-    tags: [ "v*" ]       # Ou lorsqu'on pousse un tag de version (ex: v1.0.0)
-
+    branches: [ "main" ] # Déclenche le workflow à chaque push sur la branche main
+    tags: [ "v*" ]       # Déclenche aussi lors de la publication d'un tag (ex: v1.0.0)
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: cincotech/devops-platform
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Donne le droit d'écrire dans GitHub Packages
-
+      packages: write # Requis pour publier sur GitHub Container Registry
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,7 +22,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -40,7 +35,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/Dockerfile
+          file: ./docker/Dockerfile # Chemin spécifié vers votre sous-dossier
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
