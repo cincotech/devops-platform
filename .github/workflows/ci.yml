@@ -76,7 +76,7 @@ jobs:
 
           script: |
 
-            cd ~/devops-platform
+            cd /opt/devops-platform
 
             docker pull ghcr.io/cincotech/devops-platform:latest
 
