@@ -77,14 +77,9 @@ jobs:
           script: |
 
             cd /opt/devops-platform
-           # 1. Télécharger la dernière image
             docker pull ghcr.io/cincotech/devops-platform:latest
-
-           # 2. Exporter explicitement les variables requises pour Docker Compose
-           # Remplissez ici avec les valeurs réelles de votre infrastructure cible
             export IMAGE_NAME="ghcr.io/cincotech/devops-platform"
             export IMAGE_VERSION="latest"
             export HOST_PORT="80"
             export CONTAINER_PORT="80"
-           # 3. Relancer l'application avec les variables chargées
             docker compose up -d
