@@ -69,6 +69,11 @@ jobs:
 
       - name: Deploy application
         uses: appleboy/ssh-action@v1
+        env
+          IMAGE_NAME: "ghcr.io/cincotech/devops-platform"
+          IMAGE_VERSION: "latest"
+          HOST_PORT: "8080"
+          CONTAINER_PORT: "80"
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ vars.VM_USER }}
